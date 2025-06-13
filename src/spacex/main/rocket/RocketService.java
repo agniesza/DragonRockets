@@ -49,4 +49,10 @@ public class RocketService {
         return true;
     }
 
+    public void detachFromMission(String rocketId) {
+        Rocket rocket = rocketRepository.findById(rocketId).orElseThrow();
+        rocket.setAssignedMissionId(null);
+        rocket.setStatus(RocketStatus.ON_GROUND);
+    }
+
 }

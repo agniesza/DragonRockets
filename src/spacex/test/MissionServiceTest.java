@@ -46,4 +46,5 @@ public class MissionServiceTest {
 
         assertEquals(MissionStatus.SCHEDULED, mission.getStatus());
     }
+
 }

@@ -1,6 +1,7 @@
 package spacex.main.mission;
 
 import lombok.NoArgsConstructor;
+import spacex.main.rocket.RocketService;
 import spacex.main.rocket.RocketStatus;
 
 import java.util.Optional;
@@ -9,6 +10,11 @@ import java.util.Optional;
 public class MissionService {
 
     private final MissionRepository missionRepository = new MissionRepository();
+    private RocketService rocketService;
+
+    public void setRocketService(RocketService rocketService) {
+        this.rocketService = rocketService;
+    }
 
     public Mission addMission(String name) {
         Mission mission = new Mission(name);
@@ -34,5 +40,17 @@ public class MissionService {
 
             mission.setStatus(anyInRepair ? MissionStatus.PENDING : MissionStatus.IN_PROGRESS);
         }
+    }
+
+    public void endMission(String missionId) {
+        Mission mission = missionRepository.findById(missionId).orElseThrow();
+        if (MissionStatus.ENDED.equals(mission.getStatus())) return;
+
+        mission.getRockets().forEach(
+                rocket -> rocketService.detachFromMission(rocket.getId())
+        );
+
+        mission.getRockets().clear();
+        mission.setStatus(MissionStatus.ENDED);
     }
 }
