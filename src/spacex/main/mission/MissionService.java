@@ -1,10 +1,14 @@
 package spacex.main.mission;
 
 import lombok.NoArgsConstructor;
+import spacex.main.rocket.Rocket;
 import spacex.main.rocket.RocketService;
 import spacex.main.rocket.RocketStatus;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public class MissionService {
@@ -52,5 +56,26 @@ public class MissionService {
 
         mission.getRockets().clear();
         mission.setStatus(MissionStatus.ENDED);
+    }
+
+    public List<String> getMissionsSummary() {
+        return missionRepository.findAll().stream()
+                .sorted(Comparator
+                        .comparingInt((Mission m) -> m.getRockets().size()).reversed()
+                        .thenComparing(Mission::getName, Comparator.reverseOrder()))
+                .map(mission -> {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(String.format("\n• %s – %s – Dragons: %d",
+                            mission.getName(), mission.getStatus(), mission.getRockets().size()));
+
+                    if (!mission.getRockets().isEmpty()) {
+                        mission.getRockets().stream()
+                                .sorted(Comparator.comparing(Rocket::getName))
+                                .forEach(rocket -> sb.append(System.lineSeparator())
+                                        .append(String.format("   o %s – %s", rocket.getName(), rocket.getStatus())));
+                    }
+                    return sb.toString();
+                })
+                .collect(Collectors.toList());
     }
 }
