@@ -67,6 +67,7 @@ public class MissionIntegrationTest {
         assertEquals(RocketStatus.ON_GROUND, rocket.getStatus());
     }
 
+    //example test
     @Test
     void shouldReturnFormattedMissionsSummarySortedByRocketCountAndName() {
         Mission transit = missionService.addMission("Transit");
