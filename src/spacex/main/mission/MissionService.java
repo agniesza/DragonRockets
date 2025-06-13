@@ -1,6 +1,7 @@
 package spacex.main.mission;
 
 import lombok.NoArgsConstructor;
+import spacex.main.rocket.RocketStatus;
 
 import java.util.Optional;
 
@@ -22,5 +23,16 @@ public class MissionService {
 
     public Optional<Mission> findMission(String id) {
         return missionRepository.findById(id);
+    }
+
+    public void updateMissionStatusBasedOnRockets(Mission mission) {
+        if (mission.getRockets().isEmpty()) {
+            mission.setStatus(MissionStatus.SCHEDULED);
+        } else {
+            boolean anyInRepair = mission.getRockets().stream()
+                    .anyMatch(r -> r.getStatus() == RocketStatus.IN_REPAIR);
+
+            mission.setStatus(anyInRepair ? MissionStatus.PENDING : MissionStatus.IN_PROGRESS);
+        }
     }
 }

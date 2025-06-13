@@ -38,4 +38,12 @@ public class MissionServiceTest {
         assertEquals(MissionStatus.IN_PROGRESS, updated.get().getStatus());
     }
 
+    @Test
+    void shouldSetStatusToScheduledIfNoRocketsAssigned() {
+        Mission mission = missionService.addMission("Mission S");
+
+        missionService.updateMissionStatusBasedOnRockets(mission);
+
+        assertEquals(MissionStatus.SCHEDULED, mission.getStatus());
+    }
 }
