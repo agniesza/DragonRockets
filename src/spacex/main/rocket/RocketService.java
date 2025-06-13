@@ -24,6 +24,11 @@ public class RocketService {
     public void changeStatus(String rocketId, RocketStatus status) {
         Rocket rocket = rocketRepository.findById(rocketId).orElseThrow();
         rocket.setStatus(status);
+
+        if (rocket.getAssignedMissionId() != null) {
+            Mission mission = missionService.findMission(rocket.getAssignedMissionId()).orElseThrow();
+            missionService.updateMissionStatusBasedOnRockets(mission);
+        }
     }
 
     public Optional<Rocket> findRocket(String id) {

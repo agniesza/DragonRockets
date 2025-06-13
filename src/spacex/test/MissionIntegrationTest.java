@@ -134,4 +134,107 @@ public class MissionIntegrationTest {
         assertEquals("\n• Double Landing – ENDED – Dragons: 0", summary.get(5));
     }
 
+    @Test
+    void shouldChangeRocketStatusAndUpdateMission() {
+        Rocket rocket = rocketService.addRocket("Falcon Heavy");
+        Mission mission = missionService.addMission("Orbit Gum");
+
+        rocketService.assignToMission(rocket.getId(), mission.getId());
+
+        rocketService.changeStatus(rocket.getId(), RocketStatus.IN_REPAIR);
+
+        assertEquals(RocketStatus.IN_REPAIR, rocket.getStatus());
+        assertEquals(MissionStatus.PENDING, mission.getStatus());
+
+        rocketService.changeStatus(rocket.getId(), RocketStatus.IN_SPACE);
+        assertEquals(MissionStatus.IN_PROGRESS, mission.getStatus());
+    }
+
+    @Test
+    void shouldAssignRocketToMissionAndUpdateStatusesStatus() {
+        Rocket rocket = rocketService.addRocket("Dragon 4");
+        Mission mission = missionService.addMission("LaLuna");
+
+        boolean result = rocketService.assignToMission(rocket.getId(), mission.getId());
+
+        assertTrue(result);
+        assertEquals(mission.getId(), rocket.getAssignedMissionId());
+        assertEquals(RocketStatus.IN_SPACE, rocket.getStatus());
+        assertEquals(1, mission.getRockets().size());
+        assertTrue(mission.getRockets().contains(rocket));
+        assertEquals(MissionStatus.IN_PROGRESS, mission.getStatus());
+    }
+
+    @Test
+    void shouldAssignManyRocketsToMissionAndUpdateStatusesStatus() {
+        Rocket rocket1 = rocketService.addRocket("Dragon 4");
+        Rocket rocket2 = rocketService.addRocket("Dragon 8");
+        Mission mission = missionService.addMission("LaLuna");
+
+        boolean result1 = rocketService.assignToMission(rocket1.getId(), mission.getId());
+        boolean result2 = rocketService.assignToMission(rocket2.getId(), mission.getId());
+
+        assertTrue(result1);
+        assertTrue(result2);
+        assertEquals(mission.getId(), rocket1.getAssignedMissionId());
+        assertEquals(mission.getId(), rocket2.getAssignedMissionId());
+        assertEquals(RocketStatus.IN_SPACE, rocket1.getStatus());
+        assertEquals(RocketStatus.IN_SPACE, rocket2.getStatus());
+        assertEquals(2, mission.getRockets().size());
+        assertTrue(mission.getRockets().contains(rocket1));
+        assertTrue(mission.getRockets().contains(rocket2));
+        assertEquals(MissionStatus.IN_PROGRESS, mission.getStatus());
+    }
+
+    @Test
+    void shouldSetStatusToPendingIfOneRocketIsInRepair() {
+        Mission mission = missionService.addMission("Mission A");
+        Rocket r1 = rocketService.addRocket("Rocket 1");
+        Rocket r2 = rocketService.addRocket("Rocket 2");
+
+        rocketService.changeStatus(r1.getId(), RocketStatus.IN_SPACE);
+        rocketService.changeStatus(r2.getId(), RocketStatus.IN_REPAIR);
+
+        rocketService.assignToMission(r1.getId(), mission.getId());
+        rocketService.assignToMission(r2.getId(), mission.getId());
+
+        missionService.updateMissionStatusBasedOnRockets(mission);
+
+        assertEquals(MissionStatus.PENDING, mission.getStatus());
+    }
+
+    @Test
+    void shouldSetStatusToPendingIfAllRocketIsInRepair() {
+        Mission mission = missionService.addMission("Mission A");
+        Rocket r1 = rocketService.addRocket("Rocket 1");
+        Rocket r2 = rocketService.addRocket("Rocket 2");
+
+        rocketService.changeStatus(r1.getId(), RocketStatus.IN_REPAIR);
+        rocketService.changeStatus(r2.getId(), RocketStatus.IN_REPAIR);
+
+        rocketService.assignToMission(r1.getId(), mission.getId());
+        rocketService.assignToMission(r2.getId(), mission.getId());
+
+        missionService.updateMissionStatusBasedOnRockets(mission);
+
+        assertEquals(MissionStatus.PENDING, mission.getStatus());
+    }
+
+    @Test
+    void shouldSetStatusToInProgressIfNoRocketsInRepair() {
+        Mission mission = missionService.addMission("Mission B");
+        Rocket r1 = rocketService.addRocket("Rocket A");
+        Rocket r2 = rocketService.addRocket("Rocket B");
+
+        rocketService.changeStatus(r1.getId(), RocketStatus.IN_SPACE);
+        rocketService.changeStatus(r2.getId(), RocketStatus.ON_GROUND);
+
+        rocketService.assignToMission(r1.getId(), mission.getId());
+        rocketService.assignToMission(r2.getId(), mission.getId());
+
+        missionService.updateMissionStatusBasedOnRockets(mission);
+
+        assertEquals(MissionStatus.IN_PROGRESS, mission.getStatus());
+    }
+
 }
